@@ -1,31 +1,69 @@
-from typing import Annotated
+from contextlib import asynccontextmanager
+from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Field, Session, SQLModel, create_engine, select, or_
+
 
 class ICDCode(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    code: str = Field(index=True)
+    code: str = Field(index=True, unique=True)
     description: str
 
-# Initialize FastAPI app
-app = FastAPI()
-engine = create_engine("sqlite:///database.db")
-SQLModel.metadata.create_all(engine)
 
-# Define test ICDCode records
-icd_code_1 = ICDCode(code="A00", description="Cholera")
-icd_code_2 = ICDCode(code="A01", description="Typhoid and paratyphoid fevers")
-icd_code_3 = ICDCode(code="A02", description="Other salmonella infections")
+# Database URL should ideally be in config or environment variables
+DATABASE_URL = "sqlite:///database.db"
+engine = create_engine(DATABASE_URL, echo=True)
 
-# Insert records into the database
-with Session(engine) as session:
-    session.add(icd_code_1)
-    session.add(icd_code_2)
-    session.add(icd_code_3)
+
+def create_icd_codes(session: Session) -> None:
+    icd_codes = [
+        ICDCode(code="A00", description="Cholera"),
+        ICDCode(code="A01", description="Typhoid and paratyphoid fevers"),
+        ICDCode(code="A02", description="Other salmonella infections"),
+    ]
+
+    session.add_all(icd_codes)
     session.commit()
 
-with Session(engine) as session:
-    statement = select(ICDCode).where(ICDCode.code == "A00")
-    code_a00 = session.exec(statement).first()
-    print(code_a00)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    SQLModel.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        create_icd_codes(session)
+
+    yield
+
+    SQLModel.metadata.drop_all(engine)
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+
+@app.get("/icd_10_cm", response_model=List[ICDCode])
+def read_icd_codes(
+    *,
+    session: Session = Depends(get_session),
+    search: Optional[str] = Query(None, description="Search ICD codes and descriptions"),
+):
+    query = select(ICDCode)
+    
+    if search and search.strip():
+        # Wrap the search term with wildcards for partial matching
+        search_term = f"%{search.strip()}%"
+        query = query.where(
+            or_(
+                ICDCode.code.ilike(search_term),  # Using ilike for case-insensitive search
+                ICDCode.description.ilike(search_term)
+            )
+        )
+    
+    codes = session.exec(query).all()
+    return codes

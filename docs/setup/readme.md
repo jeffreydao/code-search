@@ -31,6 +31,7 @@ app = FastAPI()
 async def root():
     return {"message": "Hello World"}
 ```
+
 ### Running the API
 ```bash
 fastapi dev main.py
