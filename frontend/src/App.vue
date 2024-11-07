@@ -3,11 +3,12 @@
     <h1>Search ICD-10 Codes</h1>
     <input
       v-model="searchQuery"
-      @input="searchICDCodes"
+      @input="debouncedSearch"
       type="text"
-      placeholder="Search"
+      placeholder="Search ICD codes or descriptions"
     />
 
+    <h2>Results:</h2>
     <table v-if="icdCodes.length">
       <thead>
         <tr>
@@ -35,6 +36,7 @@ export default {
     return {
       searchQuery: "",
       icdCodes: [],
+      debounceTimer: null, // Store the debounce timer
     };
   },
   created() {
@@ -69,6 +71,16 @@ export default {
         }
       }
     },
+    // Debounced search handler
+    debouncedSearch() {
+      // Clear the previous timer
+      clearTimeout(this.debounceTimer);
+
+      // Set a new timer to call searchICDCodes after 500ms delay
+      this.debounceTimer = setTimeout(() => {
+        this.searchICDCodes();
+      }, 500); // Adjust the delay time as necessary
+    },
   },
 };
 </script>
@@ -77,7 +89,7 @@ export default {
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   text-align: center;
-  margin-top: 40px; /* Adjusted top margin */
+  margin-top: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -87,8 +99,8 @@ export default {
 
 input {
   padding: 10px;
-  width: 300px; /* Set width of input field */
-  margin-bottom: 20px; /* Space below the input */
+  width: 300px;
+  margin-bottom: 20px;
   font-size: 16px;
   border-radius: 4px;
   border: 1px solid #ddd;
@@ -96,14 +108,14 @@ input {
 
 table {
   width: 80%;
-  max-width: 900px; /* Limit the table width */
+  max-width: 900px;
   border-collapse: collapse;
-  margin: 0 auto; /* Center the table horizontally */
+  margin: 0 auto;
 }
 
 th, td {
   border: 1px solid #ddd;
-  padding: 12px 15px; /* Add padding for more spacious cells */
+  padding: 12px 15px;
   text-align: left;
 }
 
