@@ -1,3 +1,5 @@
+# run: fastapi dev main.py
+
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
