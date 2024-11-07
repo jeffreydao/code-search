@@ -1,4 +1,5 @@
-# run: fastapi dev main.py
+# run api: fastapi dev main.py
+# run vue: npm run serve
 
 from contextlib import asynccontextmanager
 from typing import List, Optional
@@ -6,6 +7,7 @@ from typing import List, Optional
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Field, Session, SQLModel, create_engine, select, or_
 
+from fastapi.middleware.cors import CORSMiddleware
 
 class ICDCode(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -43,6 +45,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all domains, adjust for security
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 def get_session():
     with Session(engine) as session:

@@ -1,38 +1,27 @@
-## Install Conda
-
+## Node and Vue Setup (reload shell after done)
 ```bash
-mkdir -p ~/miniconda3
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
-bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
-rm ~/miniconda3/miniconda.sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install 22
+npm install -g @vue/cli
+npm install axios
 
-### After installing refresh and initialize on all available shells
-source ~/miniconda3/bin/activate
-conda init --all
+node -v # should print `v22.11.0`
+npm -v # should print `10.9.0`
+vue -V
 ```
 
-### VS-Code
+## Python venv
 1. Open command pallete
-2. Create python environment ---> Conda
-3. Select latest python version
+2. Create python environment ---> venv
+3. `pip install "fastapi[standard]" sqlmodel`
 
-## Install FastAPI
-```bash
-pip install "fastapi[standard]" sqlmodel
-```
+## Starting new Vue project
+`vue create .`
 
-### Basic main.py script
-```python
-from fastapi import FastAPI
+## Running
 
-app = FastAPI()
+`fastapi dev main.py`
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-```
-
-### Running the API
-```bash
-fastapi dev main.py
-```
+`npm run serve`
