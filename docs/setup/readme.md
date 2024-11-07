@@ -18,7 +18,7 @@ conda init --all
 
 ## Install FastAPI
 ```bash
-pip install "fastapi[standard] sqlmodel"
+pip install "fastapi[standard]" sqlmodel
 ```
 
 ### Basic main.py script
